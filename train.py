@@ -62,7 +62,7 @@ def train(parser: ArgumentParser) -> None:
     scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.25, min_lr=1e-6)
 
     # TODO - implement better garbage
-    loss_fcn = triplet_margin_loss
+    loss_fcn = OwnContrastiveLoss()
     
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
