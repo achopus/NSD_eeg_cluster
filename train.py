@@ -6,7 +6,7 @@ from convnext import ConvNeXt1D
 
 from torch.optim import Adam
 from torch.nn.functional import one_hot, cross_entropy
-from helper_modules import ContrastiveLoss
+from helper_modules import ContrastiveLoss, OwnContrastiveLoss
 
 from argparse import ArgumentParser
 from train_utils import TrainSaveObject
@@ -59,7 +59,7 @@ def train(parser: ArgumentParser) -> None:
     optimizer = Adam(model.parameters(), lr=lr)
 
     # TODO - implement better garbage
-    loss_fcn = ContrastiveLoss()
+    loss_fcn = OwnContrastiveLoss()
     
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
@@ -77,13 +77,12 @@ def train(parser: ArgumentParser) -> None:
         # Epoch iterations
         model = model.train().to(device)
         for it, (A, P, N, sA, sP, sN, cA, cP, cN) in enumerate(loader):
-            if it == 5: break
             optimizer.zero_grad()
             
             # Prepare data for training
-            X = torch.concatenate((A, P, N)).float().cuda()
-            T_subject = one_hot(torch.concatenate((sA, sP, sN)), num_classes=num_subjects).float().cuda()
-            T_class = one_hot(torch.concatenate((cA, cP, cN)), num_classes=num_classes).float().cuda()
+            X = torch.concatenate((A, P, N)).float().to(device)
+            T_subject = one_hot(torch.concatenate((sA, sP, sN)), num_classes=num_subjects).float().to(device)
+            T_class = one_hot(torch.concatenate((cA, cP, cN)), num_classes=num_classes).float().to(device)
             
             # Forward
             E, Y_subject, Y_class = model(X)
@@ -128,14 +127,14 @@ def train(parser: ArgumentParser) -> None:
 if __name__ == "__main__":
     parser = ArgumentParser(description="Server argument parses")
     parser.add_argument("--data_folder", default="data", type=str) 
-    parser.add_argument("--sample_duration", default=15, type=int)
-    parser.add_argument("--batch_size", default=12, type=int)
-    parser.add_argument("--lr", default=5e-4, type=float)
+    parser.add_argument("--sample_duration", default=15, type=float)
+    parser.add_argument("--batch_size", default=32, type=int)
+    parser.add_argument("--lr", default=1e-4, type=float)
     parser.add_argument("--n_epochs", default=100, type=int)
     parser.add_argument("--save_folder", default="train_progress", type=str)
     parser.add_argument("--negative_mode", default="easy", type=str, choices=["easy", "hard", "all"])
     parser.add_argument("--time_delta", default=15, type=float)
     parser.add_argument("--fs", default=250, type=float)
-    parser.add_argument("--num_workers", default=4, type=int)
+    parser.add_argument("--num_workers", default=0, type=int)
     
     train(parser)

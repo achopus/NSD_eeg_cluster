@@ -180,7 +180,17 @@ class NTXentLoss(Module):
         plt.imshow(S)
         plt.colorbar()
         plt.show()
-        
+
+
+class OwnContrastiveLoss(Module):
+    def __init__(self, temperature: float = 1.0) -> None:
+        super().__init__()
+        self.t = temperature
+    
+    def forward(self, A: Tensor, P: Tensor, N: Tensor) -> Tensor:
+        AP = (A * P).sum(1) / (A.norm(dim=1) * P.norm(dim=1))
+        AN = (A * N).sum(1) / (A.norm(dim=1) * N.norm(dim=1))
+        return torch.exp((-AP + AN) / self.t).mean()
         
 if __name__ == "__main__":
     batch_size = 64
@@ -188,5 +198,7 @@ if __name__ == "__main__":
     A = torch.rand((batch_size, feature_size))
     P = torch.rand((batch_size, feature_size))
     N = torch.rand((batch_size, feature_size))
-    loss_fcn = NTXentLoss()
+    loss_fcn = OwnContrastiveLoss()
     L = loss_fcn(A, P, N)
+    print(L)
+    print(L.shape)
