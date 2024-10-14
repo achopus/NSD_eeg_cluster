@@ -24,6 +24,7 @@ def train(parser: ArgumentParser) -> None:
     time_delta = args.time_delta
     fs = args.fs
     num_workers = args.num_workers
+    save_freq = args.save_freq
     
     # Loader 
     loader = get_dataloader_EEGED(folder_in=data_folder, negative_mode=negative_mode,
@@ -111,6 +112,8 @@ def train(parser: ArgumentParser) -> None:
                 # DEBUG - END
             
         # Save epoch stats
+        
+        if n % save_freq != 0 or n == 0: continue
         train_save = TrainSaveObject(epoch=n+1,
                                         model=model,
                                         lr=optimizer.param_groups[0]["lr"],
@@ -136,5 +139,6 @@ if __name__ == "__main__":
     parser.add_argument("--time_delta", default=15, type=float)
     parser.add_argument("--fs", default=250, type=float)
     parser.add_argument("--num_workers", default=0, type=int)
+    parser.add_argument("--save_freq", default=1, type=int)
     
     train(parser)
