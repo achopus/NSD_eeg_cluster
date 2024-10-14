@@ -92,7 +92,7 @@ def train(parser: ArgumentParser) -> None:
             
             # Loss calculation
             Ea, Ep, En = torch.chunk(E, 3) # Chunk embeddings based on 
-            loss_domain = cross_entropy(Y_subject, T_subject)
+            loss_domain = cross_entropy(Y_subject, T_subject).clip_(min=0, max=np.log(num_subjects))
             loss_class = cross_entropy(Y_class, T_class)
             loss_embed = loss_fcn(Ea, Ep, En)
             loss = loss_embed + loss_domain + loss_class
