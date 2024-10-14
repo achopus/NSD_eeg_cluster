@@ -5,7 +5,7 @@ from data_management import get_dataloader_EEGED
 from convnext import ConvNeXt1D
 
 from torch.optim import Adam
-from torch.nn.functional import one_hot, cross_entropy
+from torch.nn.functional import one_hot, cross_entropy, triplet_margin_loss
 from helper_modules import ContrastiveLoss, OwnContrastiveLoss
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
@@ -62,7 +62,7 @@ def train(parser: ArgumentParser) -> None:
     scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.25, min_lr=1e-6)
 
     # TODO - implement better garbage
-    loss_fcn = OwnContrastiveLoss()
+    loss_fcn = triplet_margin_loss
     
     if not os.path.exists(save_folder):
         os.mkdir(save_folder)
