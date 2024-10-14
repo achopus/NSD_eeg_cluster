@@ -7,6 +7,7 @@ from convnext import ConvNeXt1D
 from torch.optim import Adam
 from torch.nn.functional import one_hot, cross_entropy
 from helper_modules import ContrastiveLoss, OwnContrastiveLoss
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from argparse import ArgumentParser
 from train_utils import TrainSaveObject
@@ -58,6 +59,7 @@ def train(parser: ArgumentParser) -> None:
     
 
     optimizer = Adam(model.parameters(), lr=lr)
+    scheduler = ReduceLROnPlateau(optimizer, mode="min", factor=0.25, min_lr=1e-6)
 
     # TODO - implement better garbage
     loss_fcn = OwnContrastiveLoss()
@@ -111,8 +113,8 @@ def train(parser: ArgumentParser) -> None:
                 print(f"\rE:{n+1} | IT: {it + 1} | LE: {loss_embed.item():.4f} LD: {loss_domain.item():.4f} LC: {loss_class.item():.4f} (acc = {acc:.2f})", end="                      ")
                 # DEBUG - END
             
+        scheduler.step(np.mean(L_emb), epoch=n)
         # Save epoch stats
-        
         if n % save_freq != 0 or n == 0: continue
         train_save = TrainSaveObject(epoch=n+1,
                                         model=model,
@@ -132,7 +134,7 @@ if __name__ == "__main__":
     parser.add_argument("--data_folder", default="data", type=str) 
     parser.add_argument("--sample_duration", default=15, type=float)
     parser.add_argument("--batch_size", default=32, type=int)
-    parser.add_argument("--lr", default=1e-4, type=float)
+    parser.add_argument("--lr", default=1e-3, type=float)
     parser.add_argument("--n_epochs", default=100, type=int)
     parser.add_argument("--save_folder", default="train_progress", type=str)
     parser.add_argument("--negative_mode", default="easy", type=str, choices=["easy", "hard", "all"])
